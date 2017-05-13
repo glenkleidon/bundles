@@ -77,7 +77,7 @@ implementation
 
 Procedure SetProjectPath;
 begin
-  ProjectFolder := includetrailingBackSlash(ExpandFileName(StartDir+'..\'));
+  ProjectFolder := includetrailingBackSlash(ExpandFileName(StartDir));
 end;
 
 Function ListFiles(ASearchPath : string): string;
