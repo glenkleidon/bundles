@@ -1,0 +1,16 @@
+﻿ <TemplateLibrary Version="1.0" id="DVCProjectBundles">
+    <Name>DVC-project-bundle</Name>
+    <Description>Creates the architecture for a bundled projects for easy management of Distributed Version control systems</Description>
+    <Items>
+      <Item id="ProjectBundle" Creator="DelphiProjectRepositoryCreator">
+        <Name>Project Bundle</Name>
+        <Description>Creates the architecture for a bundled projects for easy management of Distributed Version control systems</Description>
+        <Author></Author>
+        <Icon>MyTemplate\MyTemplateIcon.ico</Icon>
+        <ProjectFile>CheckBundle.dproj</ProjectFile>
+        <DefaultProjectName>DVCBundle</DefaultProjectName>
+        <FilePath>bundle</FilePath>
+        <Identities>RadStudio</Identities>
+      </Item>
+    </Items>
+  </TemplateLibrary>
