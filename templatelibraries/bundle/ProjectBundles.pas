@@ -7,6 +7,7 @@ interface
     REG_PATH_CODEGEAR = 'SOFTWARE\CodeGear\BDS\%s\Known Packages';
     REG_PATH_EMBARCADERO = 'SOFTWARE\Embarcadero\BDS\%s\Known Packages';
 
+    DELPHI_VERSION= '%DelphiVersion%';
     PRODUCT_VERSION= '%ProductVersion%';
     DELPHI_EXE = '%DelphiExe%';
     DELPHI_GROUP = '%DelphiGroup';
@@ -14,25 +15,34 @@ interface
     HG_IGNORE_FILE = '.hgignore';
     GIT_IGNORE_FILE = '.gitignore';
 
+    MAX_VERSIONS=24;
+    VERSIONINFO : array[1..MAX_VERSIONS,1..2] of integer = (
+         ( 1, 1),( 2, 2),( 3, 3),( 4, 4),( 5, 5),( 6, 6),( 7, 7),
+         ( 8, 2),( 9, 3),(10, 4),(11, 5),(12, 6),(14, 7),(15, 8),
+         (16, 9),(17,10),(18,11),(19,12),(20,14),(21,15),
+         (22,16),(23,17),(24,18),(25,19)
+    );
+
+
     PROJECT_STRUCTURE =
       'bin'#13#10+
       'client'#13#10+
       'common'#13#10+
-      'componentLibrary\dcu\'+PRODUCT_VERSION+#13#10+
-      'componentLibrary\bpl\'+PRODUCT_VERSION+#13#10+
+      'componentLibrary\dcu\'+DELPHI_VERSION+#13#10+
+      'componentLibrary\bpl\'+DELPHI_VERSION+#13#10+
       'componentSource'#13#10+
       'resources'#13#10+
       'server'#13#10+
       'test';
     START_PROJECT =
-      'SET ProductVersion='+PRODUCT_VERSION+#13#10+
+      'SET DelphiVersion='+DELPHI_VERSION+#13#10+
       'SET ActiveProjectName=CHANGE_ME_IN_START_PROJECT_BAT'#13#10+
       'SET ActiveProject=%CD%\'#13#10+
-      'SET ActiveProject_Library=%CD%ComponentLibrary\'#13#10+
-      'SET ActiveProject_BPL=%ActiveProject_Library%BPL\'+PRODUCT_VERSION+'\'#13#10+
-      'SET ActiveProject_DCU=%ActiveProject_Library%DCU\'+PRODUCT_VERSION+'\'#13#10+
-      'SET ActiveProject_Source=%CD%ComponentSource\'#13#10+
-      'call .\bin\checkbundle'#13#10+
+      'SET ActiveProject_Library=%CD%\ComponentLibrary\'#13#10+
+      'SET ActiveProject_BPL=%ActiveProject_Library%BPL\'+DELPHI_VERSION+'\'#13#10+
+      'SET ActiveProject_DCU=%ActiveProject_Library%DCU\'+DELPHI_VERSION+'\'#13#10+
+      'SET ActiveProject_Source=%CD%\ComponentSource\'#13#10+
+      'call .\checkbundle'#13#10+
       'start '+DELPHI_EXE +' .\%ActiveProjectName%.'+DELPHI_GROUP+#13#10;
 
     VC_IGNORES =
@@ -50,7 +60,7 @@ interface
     HG_IGNORE = 'syntax: glob'#13#10+VC_IGNORES;
 
   var
-    ProductVersion : string;
+    DelphiVersion : string;
     ProjectFolder  : string;
     RegistryKey    : string;
     ProjectBPLFolder : string;
@@ -58,19 +68,21 @@ interface
     DelphiEXE      : string;
     DelphiGroup    : string;
 
-    DelphiInternalVersion: Integer;
-    DelphiProductVersion : string;
+    ProductVersion: Integer =0;
+    DefaultDelphiVersion : integer=0;
 
 procedure UpdateBundle;
 procedure SetProjectPath;
+Procedure SetEnvironmentVariablesByDelphiVersion(ADelphiVersion: string);
 function ReplaceEnvironmentVariables(AText: string; AfirstOnly: boolean = false): string;
 Procedure CreateProjectFolders;
 Procedure OutputBundleFiles;
 Procedure CheckBPLS;
 Procedure RemoveThisProject;
+Function EnvironmentVarToInt(AVariable:string): integer;
 Function ListProjectBPLs: string;
-Function GetProductVersion: string;
-Function DelphiVersionFromProductVersion(AProductVersion: string): integer;
+Function GetDelphiVersion: string;
+Function ProductVersionFromDelphiVersion(ADelphiVersion: string): string;
 
 implementation
   uses Registry;
@@ -100,63 +112,103 @@ begin
    result := '';
    if ProjectBPLFolder='' then
    begin
-      ProjectBPLFolder := GetEnvironmentVariable('ActiveProject_BPL');
-      if ProjectBPLFolder<>'' then ProjectBPLFolder:=includeTrailingPathDelimiter(ProjectBPLFolder);
+     ProjectBPLFolder := GetEnvironmentVariable('ActiveProject_BPL');
+     if ProjectBPLFolder<>'' then ProjectBPLFolder:=includeTrailingPathDelimiter(ProjectBPLFolder);
    end;
    if ProjectBPLFolder='' then exit;
    result := ListFiles(ProjectBPLFolder+'*.bpl');
 end;
 
-function DelphiVersionFromProductVersion(AProductVersion: string): integer;
+Function EnvironmentVarToInt(AVariable:string): integer;
 var lVersion: single;
 begin
   result := 0;
-  tryStrtoFloat(AProductVersion,lVersion);
-  result := trunc(lVersion);
+  if not tryStrtoFloat(AVariable,lVersion) then exit;
+  Result := trunc(lVersion);
+end;
+
+Function ProductVersionFromDelphiVersion(ADelphiVersion: string): string;
+var lVersionAsInt,i: Integer;
+begin
+  result := '';
+  lVersionAsInt := EnvironmentVarToInt(ADelphiVersion);
+  for i := 1 to Max_Versions do
+    if (lVersionAsInt=VERSIONINFO[i,1]) then
+    begin
+      result := format('%d.0',[VERSIONINFO[i,2]]);
+      exit;
+    end;
+end;
+
+Function DelphiVersionFromProductVersion(AProductVersion: string): string;
+var lVersion: single;
+    lVersionAsInt,i: Integer;
+begin
+  result := '';
+  lVersionAsInt := EnvironmentVarToInt(AProductVersion);
+  for i := 8 to Max_Versions do
+    if (lVersionAsInt=VERSIONINFO[i,2]) then
+    begin
+      result := format('%d.0',[VERSIONINFO[i,1]]);
+      exit;
+    end;
+end;
+
+Function GetDelphiVersion: string;
+begin
+  if DelphiVersion='' then
+    Result := getEnvironmentVariable('DelphiVersion')
+  else Result := DelphiVersion;
+  if Result='' then Result:=format('%d.0',[DefaultDelphiVersion]);
 end;
 
 Function GetProductVersion: string;
 begin
-  if ProductVersion='' then
-    Result := getEnvironmentVariable('ProductVersion')
-  else Result := ProductVersion;
-  if Result='' then Result:=DelphiProductVersion;
+  if ProductVersion=0 then
+     Result := getEnvironmentVariable('ProductVersion')
+  else Result := format('%d.0', [ProductVersion]);
+  if Result='' then Result := ProductVersionFromDelphiVersion(GetDelphiVersion);
 end;
 
-Procedure SetEnvironmentVariablesByProductVersion(AProductVersion: string);
+Procedure SetEnvironmentVariablesByDelphiVersion(ADelphiVersion: string);
 var lRegistryFormatStr: string;
     lAltVersion: string;
     lVersion:integer;
 begin
-  ProductVersion:=AProductVersion;
+  DelphiVersion:=ADelphiVersion;
   DelphiExe := 'Bds';
   DelphiGroup := 'groupproj';
-  lVersion := DelphiVersionFromProductVersion(AProductVersion);
+  lVersion := EnvironmentVarToInt(ADelphiVersion);
   case lVersion of
     0..8 :
     begin
-      lRegistryFormatStr := format(REG_PATH_DELPHI,[ProductVersion]);
+      lRegistryFormatStr := REG_PATH_DELPHI;
       DelphiGroup := 'bpg';
       DelphiEXE := 'Delphi32';
     end;
     9..13 :
     begin
-      lAltVersion := IntTostr(lVersion-3) + '.0';
-      lRegistryFormatStr := format(REG_PATH_CODEGEAR,[lAltVersion]);
+      lRegistryFormatStr := REG_PATH_CODEGEAR;
     end;
     14..99 :
     begin
-       lRegistryFormatStr := format(REG_PATH_EMBARCADERO,[ProductVersion]);
+       lRegistryFormatStr := REG_PATH_EMBARCADERO;
+    end;
+  else
+    begin
+      Writeln('Delphi Version Cannot be determined!');
+      exit;
     end;
   end;
-
+  // Registry Key requires correct Product Version
+  RegistryKey := format(lRegistryFormatStr,[GetProductVersion]);
 end;
 
 function ReplaceEnvironmentVariables(AText: string; AfirstOnly: boolean): string;
 var lReplaceFlags : TReplaceFlags;
 begin
   if AfirstOnly then lReplaceFlags := [] else  lReplaceFlags := [rfreplaceAll];
-  result := stringreplace(AText,PRODUCT_VERSION, ProductVersion, lReplaceFlags);
+  result := stringreplace(AText,DELPHI_VERSION, DelphiVersion, lReplaceFlags);
   result := stringreplace(Result,DELPHI_EXE, DelphiExe, lReplaceFlags);
   result := stringreplace(Result,DELPHI_GROUP, DelphiGroup, lReplaceFlags);
 end;
@@ -220,8 +272,9 @@ begin
   lBPLList.Text := LowerCase(ListProjectBPLs);
   if lBPLList.Count=0 then exit;
   // There are BPLs to check
+  if not Reg.KeyExists(RegistryKey) then exit;
   reg.OpenKey(RegistryKey,false);
-  reg.GetKeyNames(lKnownBPLList);
+  reg.GetValueNames(lKnownBPLList);
   lknownBPLS := LowerCase(lKnownBPLList.Text);
   freeandnil(lKnownBPLList);
   lExpectedBPLPath := '$(ActiveProject_BPL)\';
@@ -230,10 +283,10 @@ begin
   for i := 0 to pred(lBPLList.count) do
   begin
     lBPLName := lBPLList[i];
-    if lKnownBPLList.IndexOf(lExpectedBPLPath+lBPLName)<0 then
+    if pos(lowercase(lExpectedBPLPath+lBPLName),lknownBPLS)<1 then
     begin
       // not found. Is there a system alternate?
-      if pos('\'+lBPLName+#13#10,lBPLList.text)>0 then
+      if pos('\'+lowercase(lBPLName)+#13#10,lknownBPLS)>0 then
       begin
         writeln(format(
           'Warning: Component Library %s is installed outside the package', [lBPLName]));
@@ -275,7 +328,7 @@ end;
 
 procedure UpdateBundle;
 begin
-  SetEnvironmentVariablesByProductVersion(GetProductVersion);
+  SetEnvironmentVariablesByDelphiVersion(GetDelphiVersion);
   SetProjectPath;
   CreateProjectFolders;
   OutputBundleFiles;
@@ -284,30 +337,30 @@ begin
 end;
 
 initialization
-{$IFDEF VER80} DelphiProductVersion:='1.0'; DelphiInternalVersion:=8; {$ENDIF}
-{$IFDEF VER90} DelphiProductVersion:='2.0'; DelphiInternalVersion:=9; {$ENDIF}
-{$IFDEF VER100} DelphiProductVersion:='3.0'; DelphiInternalVersion:=10; {$ENDIF}
-{$IFDEF VER120} DelphiProductVersion:='4.0'; DelphiInternalVersion:=12; {$ENDIF}
-{$IFDEF VER130} DelphiProductVersion:='5.0'; DelphiInternalVersion:=13; {$ENDIF}
-{$IFDEF VER140} DelphiProductVersion:='6.0'; DelphiInternalVersion:=14; {$ENDIF}
-{$IFDEF VER150} DelphiProductVersion:='7.0'; DelphiInternalVersion:=15; {$ENDIF}
-{$IFDEF VER160} DelphiProductVersion:='8.0'; DelphiInternalVersion:=16; {$ENDIF}
-{$IFDEF VER170} DelphiProductVersion:='9.0'; DelphiInternalVersion:=17; {$ENDIF}
-{$IFDEF VER180} DelphiProductVersion:='10.0'; DelphiInternalVersion:=18; {$ENDIF}
-{$IFDEF VER180} DelphiProductVersion:='11.0'; DelphiInternalVersion:=18.5; {$ENDIF}
-{$IFDEF VER185} DelphiProductVersion:='11.0'; DelphiInternalVersion:=18.5; {$ENDIF}
-{$IFDEF VER200} DelphiProductVersion:='12.0'; DelphiInternalVersion:=20; {$ENDIF}
-{$IFDEF VER210} DelphiProductVersion:='14.0'; DelphiInternalVersion:=21; {$ENDIF}
-{$IFDEF VER220} DelphiProductVersion:='15.0'; DelphiInternalVersion:=22; {$ENDIF}
-{$IFDEF VER230} DelphiProductVersion:='16.0'; DelphiInternalVersion:=23; {$ENDIF}
-{$IFDEF VER240} DelphiProductVersion:='17.0'; DelphiInternalVersion:=24; {$ENDIF}
-{$IFDEF VER250} DelphiProductVersion:='18.0'; DelphiInternalVersion:=25; {$ENDIF}
-{$IFDEF VER260} DelphiProductVersion:='19.0'; DelphiInternalVersion:=26; {$ENDIF}
-{$IFDEF VER270} DelphiProductVersion:='20.0'; DelphiInternalVersion:=27; {$ENDIF}
-{$IFDEF VER280} DelphiProductVersion:='21.0'; DelphiInternalVersion:=28; {$ENDIF}
-{$IFDEF VER290} DelphiProductVersion:='22.0'; DelphiInternalVersion:=29; {$ENDIF}
-{$IFDEF VER300} DelphiProductVersion:='23.0'; DelphiInternalVersion:=30; {$ENDIF}
-{$IFDEF VER310} DelphiProductVersion:='24.0'; DelphiInternalVersion:=31; {$ENDIF}
-{$IFDEF VER320} DelphiProductVersion:='25.0'; DelphiInternalVersion:=32; {$ENDIF}
+{$IFDEF VER80} DefaultDelphiVersion:=1; {$ENDIF}
+{$IFDEF VER90} DefaultDelphiVersion:=2; {$ENDIF}
+{$IFDEF VER100} DefaultDelphiVersion:=3; {$ENDIF}
+{$IFDEF VER120} DefaultDelphiVersion:=4; {$ENDIF}
+{$IFDEF VER130} DefaultDelphiVersion:=5; {$ENDIF}
+{$IFDEF VER140} DefaultDelphiVersion:=6; {$ENDIF}
+{$IFDEF VER150} DefaultDelphiVersion:=7; {$ENDIF}
+{$IFDEF VER160} DefaultDelphiVersion:=8; {$ENDIF}
+{$IFDEF VER170} DefaultDelphiVersion:=9; {$ENDIF}
+{$IFDEF VER180} DefaultDelphiVersion:=10; {$ENDIF}
+{$IFDEF VER180} DefaultDelphiVersion:=11; {$ENDIF}
+{$IFDEF VER185} DefaultDelphiVersion:=11; {$ENDIF}
+{$IFDEF VER200} DefaultDelphiVersion:=12; {$ENDIF}
+{$IFDEF VER210} DefaultDelphiVersion:=14; {$ENDIF}
+{$IFDEF VER220} DefaultDelphiVersion:=15; {$ENDIF}
+{$IFDEF VER230} DefaultDelphiVersion:=16; {$ENDIF}
+{$IFDEF VER240} DefaultDelphiVersion:=17; {$ENDIF}
+{$IFDEF VER250} DefaultDelphiVersion:=18; {$ENDIF}
+{$IFDEF VER260} DefaultDelphiVersion:=19; {$ENDIF}
+{$IFDEF VER270} DefaultDelphiVersion:=20; {$ENDIF}
+{$IFDEF VER280} DefaultDelphiVersion:=21; {$ENDIF}
+{$IFDEF VER290} DefaultDelphiVersion:=22; {$ENDIF}
+{$IFDEF VER300} DefaultDelphiVersion:=23; {$ENDIF}
+{$IFDEF VER310} DefaultDelphiVersion:=24; {$ENDIF}
+{$IFDEF VER320} DefaultDelphiVersion:=25; {$ENDIF}
 
 end.
