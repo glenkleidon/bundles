@@ -16,11 +16,11 @@ interface
     GIT_IGNORE_FILE = '.gitignore';
 
     MAX_VERSIONS=24;
-    VERSIONINFO : array[1..MAX_VERSIONS,1..2] of integer = (
-         ( 1, 1),( 2, 2),( 3, 3),( 4, 4),( 5, 5),( 6, 6),( 7, 7),
-         ( 8, 2),( 9, 3),(10, 4),(11, 5),(12, 6),(14, 7),(15, 8),
-         (16, 9),(17,10),(18,11),(19,12),(20,14),(21,15),
-         (22,16),(23,17),(24,18),(25,19)
+    VERSIONINFO : array[1..MAX_VERSIONS,1..3] of integer = (
+      ( 1, 1, 8),( 2, 2, 9),( 3, 3,10),( 4, 4,12),( 5, 5,13),( 6, 6,14),
+      ( 7, 7,15),( 8, 2,16),( 9, 3,17),(10, 4,18),(11, 5,18),(12, 6,20),
+      (14, 7,21),(15, 8,22),(16, 9,23),(17,10,24),(18,11,25),(19,12,25),
+      (20,14,25),(21,15,25),(22,16,25),(23,17,30),(24,18,30),(25,19,30)
     );
 
 
@@ -36,11 +36,14 @@ interface
       'test';
     START_PROJECT =
       'SET DelphiVersion='+DELPHI_VERSION+#13#10+
+      'SET TargetVersion=%DelphiVersion%'#13#10+
+      'SET VERSIONOVERRIDE = %1' + #13#10 +
+      'IF DEFINED VERSIONOVERRIDE (SET DelphiVersion=%VERSIONOVERRIDE%)'+#13#10 +
       'SET ActiveProjectName=CHANGE_ME_IN_START_PROJECT_BAT'#13#10+
       'SET ActiveProject=%CD%\'#13#10+
       'SET ActiveProject_Library=%CD%\ComponentLibrary\'#13#10+
-      'SET ActiveProject_BPL=%ActiveProject_Library%BPL\'+DELPHI_VERSION+'\'#13#10+
-      'SET ActiveProject_DCU=%ActiveProject_Library%DCU\'+DELPHI_VERSION+'\'#13#10+
+      'SET ActiveProject_BPL=%ActiveProject_Library%BPL\%TargetVersion%\'#13#10+
+      'SET ActiveProject_DCU=%ActiveProject_Library%DCU\%TargetVersion%\'#13#10+
       'SET ActiveProject_Source=%CD%\ComponentSource\'#13#10+
       'call .\checkbundle'#13#10+
       'start '+DELPHI_EXE +' .\%ActiveProjectName%.'+DELPHI_GROUP+#13#10;
@@ -61,6 +64,7 @@ interface
 
   var
     DelphiVersion : string;
+    TargetVersion : string;
     ProjectFolder  : string;
     RegistryKey    : string;
     ProjectBPLFolder : string;
@@ -70,6 +74,7 @@ interface
 
     ProductVersion: Integer =0;
     DefaultDelphiVersion : integer=0;
+
 
 procedure UpdateBundle;
 procedure SetProjectPath;
@@ -82,6 +87,7 @@ Procedure RemoveThisProject;
 Function EnvironmentVarToInt(AVariable:string): integer;
 Function ListProjectBPLs: string;
 Function GetDelphiVersion: string;
+Function RTLCompatible(ADelphiVersion:string; ATargetVersion: string): boolean;
 Function ProductVersionFromDelphiVersion(ADelphiVersion: string): string;
 
 implementation
@@ -154,13 +160,43 @@ begin
     end;
 end;
 
+Function RTLCompatible(ADelphiVersion:string;ATargetVersion:string): boolean;
+var i, lDelphiVersion, lTargetVersion,
+    lDelphiRTL, lTargetRTL: integer;
+begin
+  result := true;
+  if ADelphiVersion=ATargetVersion then exit;
+  lDelphiRTL:=-1;
+  lTargetRTL:=-2;
+  lDelphiVersion := EnvironmentVarToInt(ADelphiVersion);
+  lTargetVersion := EnvironmentVarToInt(ATargetVersion);
+  For i := 1 TO MAX_VERSIONS do
+  begin
+    if (lDelphiVersion=VERSIONINFO[i,1]) then lDelphiRTL:=VERSIONINFO[i,3];
+    if (lTargetVersion=VERSIONINFO[i,1]) then lTargetRTL:=VERSIONINFO[i,3];
+  end;
+  Result := lDelphiRTL=lTargetRTL;
+end;
+
+
 Function GetDelphiVersion: string;
 begin
   if DelphiVersion='' then
     Result := getEnvironmentVariable('DelphiVersion')
   else Result := DelphiVersion;
   if Result='' then Result:=format('%d.0',[DefaultDelphiVersion]);
+  DelphiVersion:=Result;
 end;
+
+Function GetTargetVersion: string;
+begin
+  if TargetVersion='' then
+    Result := getEnvironmentVariable('TargetVersion')
+  else Result := DelphiVersion;
+  if Result='' then Result:=format('%d.0',[DefaultDelphiVersion]);
+  TargetVersion:=Result;
+end;
+
 
 Function GetProductVersion: string;
 begin
@@ -262,7 +298,8 @@ var reg : TRegistry;
     lExpectedBPLPath, lBPLName, lknownBPLS : string;
     i:integer;
 begin
-  if RegistryKey='' then exit;
+  if (RegistryKey='') or
+     (not RTLCompatible(GetDelphiVersion, GetTargetVersion)) then exit;
   reg := TRegistry.Create;
   lKnownBPLList := TStringlist.Create;
   lBPLList := TStringlist.Create;
