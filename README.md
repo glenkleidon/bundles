@@ -12,12 +12,13 @@ To help with this the Project Template included in this repository can automate
 the creation and maintenance of you bundle structure.
 
 ## The golden rule of Project Bundling
+---|----------------------------------------------
+   |If you can *_Clone and Compile_* on a clean delphi installation, you have a Project Bundle  
 
-     If you can *_Clone and Compile_* on a clean delphi installation, you have a Project Bundle  
+Obviously the corollary of this is that:
 
-Obviously the correlary of this is that
-
-     If you can't *_Clone and Compile_* on a clean delphi installation, you *dont* have a Project Bundle  
+---|----------------------------------------------
+   |If you can't *_Clone and Compile_* on a clean delphi installation, you *dont* have a Project Bundle  
 
 
 
