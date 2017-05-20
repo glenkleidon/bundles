@@ -13,11 +13,11 @@ the creation and maintenance of you bundle structure.
 
 ## The golden rule of Project Bundling
 
-_If you can **Clone and Compile** on a clean delphi installation, you have a Project Bundle_
+> _If you can **Clone and Compile** on a clean delphi installation, you have a Project Bundle_
 
 Obviously the corollary of this is that:
 
-_If you can't **Clone and Compile** on a clean delphi installation, you *dont* have a Project Bundle_
+> _If you can't **Clone and Compile** on a clean delphi installation, you *dont* have a Project Bundle_
 
 ## What are the Issues Project Bundling Solves?
 
@@ -29,12 +29,15 @@ _If you can't **Clone and Compile** on a clean delphi installation, you *dont* h
  + GetIt Package installer in the latest BDS helps find packages but does not help to reduce the problem
  
 ### Component Installation Hampers Productivity and Mobility
-Even simple projects with only a few components installed can take hours or days to get set up in a new environment.  This makes it hard to simply get the project and start working on it on a different computer from which it was originally created.  This is troublesome for a singled developer, but a disater in a team or corporate environment
+Even simple projects with only a few components installed can take hours or days to get set up in a new environment.  
+This makes it hard to simply get the project and start working on it on a different computer from which it was originally created.
+This is troublesome for a singled developer, but a disater in a team or corporate environment
 
 So it means that:
   + You cant just buy a new computer without accepting that you will loose days of productivity
   + New developers can be unproductive for days or even weeks (particular problem for consultants)
-  + In corporate environments, the solution to a PC maintenance issues are typically to re-image the PC and developer is reluctant to do that.
+  + In corporate environments, the solution to PC maintenance issues is often to re-image the PC.  The Developer has so much invested 
+  in the configuration that they are reluctant to do that.
   + Using installers means you need admin privileges which is a problem in corporate environments. A domain admin has to:
     + provide local administrator access; OR
     + Log in as administrator, install all the components and then use a tool to copy the configuration to the developers account; OR
@@ -48,12 +51,15 @@ all of these techniques in your project and to make use of a distributed version
 
 ### Rules 
 1. Use Distributed Version control repository to hold your project
-2. The repository _*MUST*_ hold everything you need to build the project. Include ALL the components in your repository but limit to the BPL and DCU files (and if required, the DFM and RES files) for *each* version of Delphi you want to support. In some cases, the source for the components may be helpful, but avoid if possible.
+2. The repository _*MUST*_ hold everything you need to build the project. 
+ Include ALL the components in your repository but limit to the BPL and DCU files (and if required, the DFM and RES files) for *each* version of Delphi you want to support. In some cases, the source for the components may be helpful, but avoid if possible.
 3. _*ALWAYS *_ create a project Group.
-3. Do not use the library path for anything else but out-of-the-box Delphi libraries, use the Project Search Path (and debug path) instead
+3. Do not use the library path for anything else but out-of-the-box Delphi libraries.
+  Use the Project Search Path and Debug path instead
 4. Don’t _*ever*_ use static file paths. Use _*only*_ _relative paths_
-5. Make use of _environment variables_ to describe the relative paths.  Use a batch file to set environment and start the ide and/or use the MS Build features in the DPROJ file to define PropertyGroups.
-5. Do not _install packages_ in the IDE - Manage them inside the bundle
+5. Define _environment variables_ to describe the bundle folders, delphi versions, and component paths.
+  Use a batch file to set environment and start the ide in combination with MS Build features in the DPROJ file.
+5. Do not _install packages_ in the IDE - Manage them inside the bundle.
 
 Always remember to maintain a separate "Components" repository to "escrow" your component sets and licenses.
 
@@ -65,8 +71,8 @@ This project template basically creates a poor mans answer to a package manager 
 1. Download or clone this repository
 2. Copy the Contents of "TemplateLibraries" into a sensible Location for your version of Delphi (say Documents/Embarcadero/templatelibraries or Documents/Delphi/projectTemplates)
 3. Add the Template to Delphi
-  a. In Pre-BDS versions of Delphi open the CheckBundle Project and then click Project-->Add to Repository. Fill in the title and description and select the Project Page.
-  b. In BDS Click Tools-->Template Libraries, select ADD and then browse to the ProjectBundle.bdstemplatelib file and click Open. 
+  + In Pre-BDS versions of Delphi open the CheckBundle Project and then click Project-->Add to Repository. Fill in the title and description and select the Project Page.
+  + In BDS Click Tools-->Template Libraries, select ADD and then browse to the ProjectBundle.bdstemplatelib file and click Open. 
 
 Project bundles will then be available from the New Projects menu (or for pre BDS,  New-->other-->Projects)
 
