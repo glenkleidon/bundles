@@ -67,6 +67,8 @@ Always remember to maintain a separate "Components" repository to "escrow" your 
 This repository contains a Project Library Template for Delphi which will create and help maintain a project bundle structure.
 This project template basically creates a poor mans answer to a package manager for Delphi.  The concept is simliar to that of NPM for NodeJS in that it helps prepare the way for a project if it has not been used on this particular installation before and helps maintain it if things change.  Unlike NPM though, it prepares the IDE for use with a project rather than collects what is required by the project definition.
 
+A demonstration of a bundled repo is located at [Demo Bundle](https://github.com/glenkleidon/bundleDemo)
+
 ## Installing the bundle.
 1. Download or clone this repository
 2. Copy the Contents of "TemplateLibraries" into a sensible Location for your version of Delphi (say Documents/Embarcadero/templatelibraries or Documents/Delphi/projectTemplates)
