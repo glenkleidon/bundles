@@ -4,7 +4,7 @@
 Project Bundles are a way to eliminate the major Delphi productivity and
 portability issues.
 
-It is simply an approach to use to increase productivity and developer collaboration 
+It is simply an approach that helps increase productivity and developer collaboration 
 by defining a set of simple rules to follow when creating a distrubuted version
 control repository for delphi Project Groups  (AKA "Delphi Solutions")
 
@@ -31,10 +31,10 @@ Obviously the corollary of this is that:
 ### Component Installation Hampers Productivity and Mobility
 Even simple projects with only a few components installed can take hours or days to get set up in a new environment.  
 This makes it hard to simply get the project and start working on it on a different computer from which it was originally created.
-This is troublesome for a singled developer, but a disater in a team or corporate environment
+This is troublesome for a singled developer, but a disaster in a team or corporate environment.
 
 So it means that:
-  + You cant just buy a new computer without accepting that you will loose days of productivity
+  + You can't just buy a new computer without accepting that you will loose days of productivity
   + New developers can be unproductive for days or even weeks (particular problem for consultants)
   + In corporate environments, the solution to PC maintenance issues is often to re-image the PC.  The Developer has so much invested 
   in the configuration that they are reluctant to do that.
@@ -61,7 +61,7 @@ all of these techniques in your project and to make use of a distributed version
   Use a batch file to set environment and start the ide in combination with MS Build features in the DPROJ file.
 5. Do not _install packages_ in the IDE - Manage them inside the bundle.
 
-Always remember to maintain a separate "Components" repository to "escrow" your component sets and licenses.
+Always remember to maintain a separate "Components" repository to "escrow" your full component sets source and licenses.
 
 # Bundle Project Library Template
 This repository contains a Project Library Template for Delphi which will create and help maintain a project bundle structure.
@@ -73,8 +73,8 @@ A demonstration of a bundled repo is located at [Demo Bundle](https://github.com
 1. Download or clone this repository
 2. Copy the Contents of "TemplateLibraries" into a sensible Location for your version of Delphi (say Documents/Embarcadero/templatelibraries or Documents/Delphi/projectTemplates)
 3. Add the Template to Delphi
-  + In Pre-BDS versions of Delphi open the CheckBundle Project and then click Project-->Add to Repository. Fill in the title and description and select the Project Page.
-  + In BDS Click Tools-->Template Libraries, select ADD and then browse to the ProjectBundle.bdstemplatelib file and click Open. 
+  + In Pre-BDS versions of Delphi open the CheckBundle Project and then click Project-->Add to Repository. Fill in the title and description and select the _Project_ Page.
+  + In BDS/RAD Studio Click Tools-->Template Libraries, select ADD and then browse to the ProjectBundle.bdstemplatelib file and click Open. 
 
 Project bundles will then be available from the New Projects menu (or for pre BDS,  New-->other-->Projects)
 
