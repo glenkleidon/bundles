@@ -59,7 +59,7 @@ all of these techniques in your project and to make use of a distributed version
 4. Don’t _*ever*_ use static file paths. Use _*only*_ _relative paths_
 5. Define _environment variables_ to describe the bundle folders, delphi versions, and component paths.
   Use a batch file to set environment and start the ide in combination with MS Build features in the DPROJ file.
-5. Do not _install packages_ in the IDE - Manage them inside the bundle.
+5. Manage the  _installed packages_ in the IDE from inside the bundle. IE Avoid  adding component sets to default Delphi installation. 
 
 Always remember to maintain a separate "Components" repository to "escrow" your full component sets source and licenses.
 
@@ -94,10 +94,6 @@ Project bundles will then be available from the New Projects menu (or for pre BD
 --tba
 ## Adding Components
 --tba
-
-
-
-
 
 
 
