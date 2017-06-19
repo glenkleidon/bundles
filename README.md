@@ -5,7 +5,7 @@ Project Bundles are a way to eliminate the major Delphi productivity and
 portability issues.
 
 It is simply an approach that helps increase productivity and developer collaboration 
-by defining a set of simple rules to follow when creating a distrubuted version
+by defining a set of simple rules to follow when creating a distributed version
 control repository for delphi Project Groups  (AKA "Delphi Solutions")
 
 To help with this the Project Template included in this repository can automate
