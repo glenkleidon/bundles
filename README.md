@@ -13,11 +13,11 @@ the creation and maintenance of you bundle structure.
 
 ## The golden rule of Project Bundling
 
-> _If you can **Clone and Compile** on a clean delphi installation, you have a Project Bundle_
+> _If you can **Clone and Open** in a clean delphi installation, you have a Project Bundle_
 
 Obviously the corollary of this is that:
 
-> _If you can't **Clone and Compile** on a clean delphi installation, you *dont* have a Project Bundle_
+> _If you can't **Clone and Open** in a clean delphi installation, you *dont* have a Project Bundle_
 
 ## What are the Issues Project Bundling Solves?
 
