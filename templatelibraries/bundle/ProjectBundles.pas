@@ -68,6 +68,7 @@ interface
     ProjectFolder  : string;
     RegistryKey    : string;
     ProjectBPLFolder : string;
+    ProjectDCUFolder : string;
     StartDir       : string;
     DelphiEXE      : string;
     DelphiGroup    : string;
@@ -86,9 +87,13 @@ Procedure CheckBPLS;
 Procedure RemoveThisProject;
 Function EnvironmentVarToInt(AVariable:string): integer;
 Function ListProjectBPLs: string;
+Function ListDCUFolders: string;
+Function ListProjects: string;
 Function GetDelphiVersion: string;
 Function RTLCompatible(ADelphiVersion:string; ATargetVersion: string): boolean;
 Function ProductVersionFromDelphiVersion(ADelphiVersion: string): string;
+function extractProjectNamesFromGroupProj(AFilename: string): string ;
+function extractProjectNamesFromBPG(AFilename: string): string;
 
 implementation
   uses Registry;
@@ -123,6 +128,112 @@ begin
    end;
    if ProjectBPLFolder='' then exit;
    result := ListFiles(ProjectBPLFolder+'*.bpl');
+end;
+
+Function ListDCUFolders: string;
+begin
+  // Find all folders under DCUs
+
+end;
+
+Function ListProjects: string;
+var lGroupName,
+    LGroupProjFilename, LBPGFilename: string;
+begin
+  // Load All projects in the group
+  Result := '';
+ lGroupName := GetEnvironmentVariable('ActiveProjectName');
+ LGroupProjFilename := ProjectFolder + lGroupName + '.groupproj';
+ lBPGFilename := ProjectFolder + lGroupName + '.bpg';
+ result :=
+    extractProjectNamesFromGroupProj(lGRoupProjFilename) +
+    extractProjectNamesFromBPG(lBPGFilename);
+
+end;
+//<Projects Include="
+
+function extractProjectNamesFromGroupProj(AFilename: string): string ;
+var lGroupProj: TStringlist;
+    lProgramList: TStringlist;
+    lBinary, lDPR : string;
+    i,p,q: integer;
+begin
+  // Extracts the project Names from a GroupProj file.
+  result := '';
+  if FileExists(AFilename) then
+  begin
+    lGroupProj := TStringlist.Create;
+    lProgramList := TStringlist.Create;
+    try
+       repeat
+         p := pos
+
+       until (True);
+       lProgramList.Delimiter := ' ';
+       lProgramList.text := lGroupProj.Values['PROJECTS'];
+       p := pos('PROJECTS',lGroupProj.Text);
+       if p>0 then
+       begin
+         lGroupProj := stringreplace( copy(lGroupProj.Text,p,MAXInt),
+            ': ', '=', [rfReplaceAll]);
+         for i := lProgramList.Count - 1 downto 0 do
+         begin
+           lBinary := lProgramList[i];
+           if length(lBinary)=0 then
+           begin
+            lProgramList.Delete(i);
+            continue;
+           end;
+           lProgramList[i] := lGroupProj.Values[lBinary];
+         end;
+       end;
+       result := stringreplace(lProgramList.Text,' ',#13#10,[rfReplaceAll]);
+    finally
+      freeandnil(lGroupProj);
+      freeandnil(lProgramList);
+    end;
+  end;
+end;
+
+function extractProjectNamesFromBPG(AFilename: string): string;
+var lBPG: TStringlist;
+    lProgramList: TStringlist;
+    lBinary, lDPR : string;
+    i,p: integer;
+begin
+  // Extracts the project Names from a BPG file.
+  result := '';
+  if FileExists(AFilename) then
+  begin
+    lBPG := TStringlist.Create;
+    lProgramList := TStringlist.Create;
+    try
+       lProgramList.Delimiter := ' ';
+       lProgramList.text := lBPG.Values['PROJECTS'];
+       p := pos('PROJECTS',lBPG.Text);
+       if p>0 then
+       begin
+         lBPG := stringreplace( copy(lBPG.Text,p,MAXInt),
+            ': ', '=', [rfReplaceAll]);
+         for i := lProgramList.Count - 1 downto 0 do
+         begin
+           lBinary := lProgramList[i];
+           if length(lBinary)=0 then
+           begin
+            lProgramList.Delete(i);
+            continue;
+           end;
+           lProgramList[i] := stringREplace(
+                     lBPG.Values[lBinary], ' ', #13#10,
+                     [rfReplaceAll]);
+         end;
+       end;
+       result := lProgramList.Text;
+    finally
+      freeandnil(lBPG);
+      freeandnil(lProgramList);
+    end;
+  end;
 end;
 
 Function EnvironmentVarToInt(AVariable:string): integer;
@@ -340,6 +451,8 @@ begin
     freeandnil(lBPLList);
   end;
 end;
+
+Procedure CheckDCUPaths;
 
 Procedure RemoveThisProject;
 var lTargetFiles: TStringlist;

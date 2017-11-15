@@ -5,7 +5,7 @@ program checkbundle;
 {$R *.res}
 
 uses
-  System.SysUtils,
+  SysUtils,
   ProjectBundles in 'ProjectBundles.pas';
 
 begin
