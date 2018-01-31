@@ -37,16 +37,21 @@ interface
     START_PROJECT =
       'SET DelphiVersion='+DELPHI_VERSION+#13#10+
       'SET TargetVersion=%DelphiVersion%'#13#10+
-      'SET VERSIONOVERRIDE = %1' + #13#10 +
+      'SET VERSIONOVERRIDE=%1' + #13#10 +
       'IF DEFINED VERSIONOVERRIDE (SET DelphiVersion=%VERSIONOVERRIDE%)'+#13#10 +
       'SET ActiveProjectName=CHANGE_ME_IN_START_PROJECT_BAT'#13#10+
+      'if %ActiveProjectName%==CHANGE_ME_IN_START_PROJECT_BAT ('#13#10+
+      '   @echo Set Project name in StartProject.bat'#13#10+
+      '   @Goto END'#13#10+
+      ')'+#13#10 +
       'SET ActiveProject=%CD%\'#13#10+
       'SET ActiveProject_Library=%CD%\ComponentLibrary\'#13#10+
       'SET ActiveProject_BPL=%ActiveProject_Library%BPL\%TargetVersion%\'#13#10+
       'SET ActiveProject_DCU=%ActiveProject_Library%DCU\%TargetVersion%\'#13#10+
       'SET ActiveProject_Source=%CD%\ComponentSource\'#13#10+
       'call .\checkbundle'#13#10+
-      'start '+DELPHI_EXE +' .\%ActiveProjectName%.'+DELPHI_GROUP+#13#10;
+      'start '+DELPHI_EXE +' /r%ActiveProjectName% .\%ActiveProjectName%.'+DELPHI_GROUP+#13#10+
+      ':END';
 
     VC_IGNORES =
       '*.local'#13#10+
@@ -155,8 +160,37 @@ end;
 function extractProjectNamesFromGroupProj(AFilename: string): string ;
 var lGroupProj: TStringlist;
     lProgramList: TStringlist;
-    lBinary, lDPR : string;
+    lBinary, lItemGroup : string;
     i,p,q: integer;
+    // Extract the XML Node containing the ItemGroup.
+    function GetFirstItemGroup: string;
+    var pp,qq: integer;
+    begin
+      result := '';
+      pp := 0; qq := 0;
+      pp := pos('<ItemGroup>',lProgramList.text);
+      if pp>0 then qq := pos('</ItemGroup>',lProgramList.text);
+      if qq>0 then result := copy(lProgramList, pp+11, qq-pp-11);
+    end;
+
+    Function GetNextProject: string;
+    var pp,qq: integer;
+        lGroup: string;
+    begin
+      result := '';
+      pp := 0; qq := 0;
+      pp := pos('<Projects ', lItemGroup);
+      if pp>0 then qq := Pos('</Projects>, lItemGroup) else exit;
+      lGroup := Copy(lItemGroup, pp, qq-pp-1);
+      lItemGroup := copy(lItemGroup, qq+11, MAXINT);
+      pp := pos('Include="', lGroup);
+      if pp>0 then
+      begin
+        lgroup := copy(lGroup,pp+9, MAXINT);
+        pp := pos('"',lGroup);
+        result := copy(lGroup,1, pp-1);
+      end;
+    end;
 begin
   // Extracts the project Names from a GroupProj file.
   result := '';
@@ -165,30 +199,16 @@ begin
     lGroupProj := TStringlist.Create;
     lProgramList := TStringlist.Create;
     try
-       repeat
-         p := pos
-
-       until (True);
-       lProgramList.Delimiter := ' ';
-       lProgramList.text := lGroupProj.Values['PROJECTS'];
-       p := pos('PROJECTS',lGroupProj.Text);
-       if p>0 then
+       lGroupProj.LoadFromFile(AFilename);
+       lItemGroup := GetFirstItemGroup;
+       lBinary := GetNextProject;
+       while length(lBinary>0) do
        begin
-         lGroupProj := stringreplace( copy(lGroupProj.Text,p,MAXInt),
-            ': ', '=', [rfReplaceAll]);
-         for i := lProgramList.Count - 1 downto 0 do
-         begin
-           lBinary := lProgramList[i];
-           if length(lBinary)=0 then
-           begin
-            lProgramList.Delete(i);
-            continue;
-           end;
-           lProgramList[i] := lGroupProj.Values[lBinary];
-         end;
+         lProgramList.Add(lBinary);
+         lBinary := GetNextProject;
        end;
-       result := stringreplace(lProgramList.Text,' ',#13#10,[rfReplaceAll]);
-    finally
+       result := lProgramList.Text;
+     finally
       freeandnil(lGroupProj);
       freeandnil(lProgramList);
     end;
@@ -208,6 +228,7 @@ begin
     lBPG := TStringlist.Create;
     lProgramList := TStringlist.Create;
     try
+       lBPG.LoadFromFile(AFilename);
        lProgramList.Delimiter := ' ';
        lProgramList.text := lBPG.Values['PROJECTS'];
        p := pos('PROJECTS',lBPG.Text);
