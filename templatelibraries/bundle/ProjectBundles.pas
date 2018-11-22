@@ -15,12 +15,13 @@ interface
     HG_IGNORE_FILE = '.hgignore';
     GIT_IGNORE_FILE = '.gitignore';
 
-    MAX_VERSIONS=24;
+    MAX_VERSIONS=25;
     VERSIONINFO : array[1..MAX_VERSIONS,1..3] of integer = (
       ( 1, 1, 8),( 2, 2, 9),( 3, 3,10),( 4, 4,12),( 5, 5,13),( 6, 6,14),
       ( 7, 7,15),( 8, 2,16),( 9, 3,17),(10, 4,18),(11, 5,18),(12, 6,20),
       (14, 7,21),(15, 8,22),(16, 9,23),(17,10,24),(18,11,25),(19,12,25),
-      (20,14,25),(21,15,25),(22,16,25),(23,17,30),(24,18,30),(25,19,30)
+      (20,14,25),(21,15,25),(22,16,25),(23,17,30),(24,18,30),(25,19,30),
+      (26,20,33)
     );
 
 
@@ -95,7 +96,7 @@ implementation
 
 Procedure SetProjectPath;
 begin
-  ProjectFolder := includetrailingBackSlash(ExpandFileName(StartDir));
+  ProjectFolder := IncludetrailingPathDelimiter(ExpandFileName(StartDir));
 end;
 
 Function ListFiles(ASearchPath : string): string;
@@ -147,7 +148,7 @@ begin
 end;
 
 Function DelphiVersionFromProductVersion(AProductVersion: string): string;
-var lVersion: single;
+var
     lVersionAsInt,i: Integer;
 begin
   result := '';
@@ -208,7 +209,6 @@ end;
 
 Procedure SetEnvironmentVariablesByDelphiVersion(ADelphiVersion: string);
 var lRegistryFormatStr: string;
-    lAltVersion: string;
     lVersion:integer;
 begin
   DelphiVersion:=ADelphiVersion;
@@ -399,5 +399,5 @@ initialization
 {$IFDEF VER300} DefaultDelphiVersion:=23; {$ENDIF}
 {$IFDEF VER310} DefaultDelphiVersion:=24; {$ENDIF}
 {$IFDEF VER320} DefaultDelphiVersion:=25; {$ENDIF}
-
+{$IFDEF VER330} DefaultDelphiVersion:=26; {$ENDIF}
 end.
